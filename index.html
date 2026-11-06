@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A little of us</title>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: #fff;
+    color: #555248;
+    font-family: Arial, sans-serif;
+  }
+
+  header {
+    position: absolute;
+    top: 28px;
+    left: 28px;
+    right: 28px;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  h1 {
+    margin: 0;
+    font: normal 25px Georgia, serif;
+    letter-spacing: -0.7px;
+  }
+
+  header p {
+    margin: 10px 0;
+    color: #99958b;
+    font-size: 11px;
+    line-height: 1.7;
+    max-width: 230px;
+  }
+
+  #count {
+    position: absolute;
+    right: 0;
+    top: 7px;
+    font-size: 10px;
+    color: #aaa59b;
+  }
+
+  #paper {
+    position: relative;
+    width: 100%;
+    height: 100svh;
+    min-height: 540px;
+    overflow: hidden;
+    cursor: crosshair;
+  }
+
+  #empty {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    text-align: center;
+    pointer-events: none;
+    padding-bottom: 50px;
+    color: #b7b2a8;
+  }
+
+  #empty strong {
+    font: italic 23px Georgia, serif;
+    font-weight: normal;
+  }
+
+  #empty p {
+    font-size: 10px;
+    letter-spacing: 0.4px;
+    margin-top: 14px;
+  }
+
+  .hand {
+    position: absolute;
+    width: 150px;
+    height: 168px;
+    transform: translate(-50%, -50%) rotate(var(--angle));
+    mix-blend-mode: multiply;
+    text-align: center;
+    pointer-events: none;
+    animation: press 0.35s ease-out;
+  }
+
+  .hand img {
+    display: block;
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    filter: var(--tone);
+    opacity: 0.9;
+  }
+
+  .hand span {
+    display: block;
+    margin-top: -3px;
+    font: italic 13px Georgia, serif;
+    color: #827b6d;
+    white-space: nowrap;
+  }
+
+  .preview { opacity: 0.35; }
+
+  .controls {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: max-content;
+    max-width: calc(100% - 28px);
+  }
+
+  .palette {
+    display: flex;
+    gap: 16px;
+    padding: 13px 19px;
+    border: 1px solid #eeeae3;
+    border-radius: 40px;
+    background: #ffffffeb;
+  }
+
+  .palette button {
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .palette button[aria-pressed="true"]::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border: 1px solid #b6ad9c;
+    border-radius: 50%;
+  }
+
+  #hint {
+    margin: 0;
+    color: #a7a093;
+    font-size: 10px;
+    background: #ffffffcc;
+  }
+
+  form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+    padding: 8px;
+    background: #fff;
+    border: 1px solid #e8e4dc;
+    border-radius: 7px;
+    box-shadow: 0 5px 25px #00000006;
+  }
+
+  input {
+    min-width: 0;
+    width: 210px;
+    padding: 10px;
+    border: 0;
+    background: transparent;
+    font: 12px Arial, sans-serif;
+    color: #625b4e;
+  }
+
+  input::placeholder { color: #aaa295; }
+
+  button { font-family: Arial, sans-serif; }
+
+  .submit {
+    padding: 12px 14px;
+    border: 0;
+    border-radius: 4px;
+    background: #515446;
+    color: #fff;
+    font-size: 11px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .submit:disabled { opacity: 0.4; }
+
+  .cancel {
+    background: none;
+    border: 0;
+    color: #aaa295;
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  [hidden] { display: none !important; }
+
+  :focus-visible {
+    outline: 1px solid #8d887a;
+    outline-offset: 4px;
+  }
+
+  @keyframes press {
+    from { opacity: 0; scale: 1.12; }
+    to { opacity: 1; scale: 1; }
+  }
+
+  @media (max-width: 500px) {
+    header { left: 22px; right: 22px; }
+    h1 { font-size: 23px; }
+    header p { max-width: 205px; font-size: 10px; }
+    #count { font-size: 9px; }
+    .controls { width: calc(100% - 28px); }
+    form { width: 100%; gap: 4px; }
+    input { width: 100%; flex: 1; font-size: 11px; }
+    .submit { padding: 12px 10px; font-size: 10px; }
+    .hand { width: 125px; height: 143px; }
+    .hand img { width: 125px; height: 125px; }
+    .hand span { font-size: 11px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hand { animation: none; }
+  }
+</style>
+</head>
+
+<body>
+<header>
+  <h1>A little of us.</h1>
+  <p>Click the paper. Leave a handprint and one word.</p>
+  <span id="count">0 handprints</span>
+</header>
+
+<main id="paper" tabindex="0" aria-label="Paper canvas. Click or press Enter to choose a place.">
+  <div id="empty">
+    <strong>Every hand has a place.</strong>
+    <p>Yours can be the first.</p>
+  </div>
+  <div id="marks"></div>
+</main>
+
+<div class="controls">
+  <div class="palette" id="palette" aria-label="Choose a paint color"></div>
+  <p id="hint">Choose a color, then click anywhere.</p>
+
+  <form id="form" hidden>
+    <input
+      id="word"
+      aria-label="One word for how you feel"
+      placeholder="One word for how you feel…"
+      maxlength="12"
+      autocomplete="off"
+      required
+    >
+    <button class="submit" id="submit" disabled>Leave my mark ↗</button>
+    <button class="cancel" type="button" id="cancel" aria-label="Cancel">×</button>
+  </form>
+</div>
+
+<script>
+/* The handprint picture is embedded, so no other files are needed. */
+const image = "data:image/webp;base64,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";
+
+const colors = [
+  ["Terracotta", "#dc7355", "saturate(.55) brightness(1.25)"],
+  ["Yellow", "#e8b849", "hue-rotate(43deg) saturate(.65) brightness(1.95)"],
+  ["Green", "#769b85", "hue-rotate(115deg) saturate(.25) brightness(1.35)"],
+  ["Blue", "#7a9cb2", "hue-rotate(182deg) saturate(.3) brightness(1.55)"],
+  ["Purple", "#a394b9", "hue-rotate(265deg) saturate(.2) brightness(1.6)"],
+  ["Pink", "#d39ba6", "hue-rotate(322deg) saturate(.25) brightness(1.9)"]
+];
+
+const paper = document.getElementById("paper");
+const marks = document.getElementById("marks");
+const empty = document.getElementById("empty");
+const form = document.getElementById("form");
+const input = document.getElementById("word");
+const submit = document.getElementById("submit");
+const hint = document.getElementById("hint");
+const palette = document.getElementById("palette");
+const key = "little-of-us-paper-v1";
+
+let prints = [];
+let selectedColor = 0;
+let point = null;
+let preview = null;
+
+function valid(p) {
+  return p &&
+    Number.isFinite(p.x) && p.x >= 10 && p.x <= 90 &&
+    Number.isFinite(p.y) && p.y >= 20 && p.y <= 77 &&
+    Number.isInteger(p.color) && p.color >= 0 && p.color < colors.length &&
+    Number.isFinite(p.angle) && Math.abs(p.angle) <= 17 &&
+    typeof p.word === "string" && p.word.length <= 12;
+}
+
+try {
+  const saved = JSON.parse(localStorage.getItem(key) || "[]");
+  if (Array.isArray(saved)) prints = saved.filter(valid);
+} catch {}
+
+function makeHand(p, temporary = false) {
+  const hand = document.createElement("div");
+  hand.className = "hand" + (temporary ? " preview" : "");
+  hand.style.left = p.x + "%";
+  hand.style.top = p.y + "%";
+  hand.style.setProperty("--angle", p.angle + "deg");
+  hand.style.setProperty("--tone", colors[p.color][2]);
+
+  const picture = document.createElement("img");
+  picture.src = image;
+  picture.alt = "";
+  picture.draggable = false;
+
+  const word = document.createElement("span");
+  word.textContent = p.word;
+
+  hand.append(picture, word);
+  return hand;
+}
+
+function render() {
+  marks.replaceChildren(...prints.map(p => makeHand(p)));
+  document.getElementById("count").textContent =
+    prints.length + (prints.length === 1 ? " handprint" : " handprints");
+  empty.hidden = prints.length > 0 || point !== null;
+}
+
+function updatePreview() {
+  if (preview) preview.remove();
+  preview = null;
+
+  if (point) {
+    preview = makeHand({
+      ...point,
+      color: selectedColor,
+      word: input.value,
+      angle: -6
+    }, true);
+
+    paper.append(preview);
+  }
+
+  empty.hidden = prints.length > 0 || point !== null;
+  submit.disabled = !input.value.trim();
+}
+
+function choose(x, y) {
+  point = {
+    x: Math.max(10, Math.min(90, x)),
+    y: Math.max(20, Math.min(77, y))
+  };
+
+  form.hidden = false;
+  hint.hidden = true;
+  updatePreview();
+  input.focus({ preventScroll: true });
+}
+
+function cancel() {
+  point = null;
+  if (preview) preview.remove();
+  preview = null;
+  input.value = "";
+  form.hidden = true;
+  hint.hidden = false;
+  render();
+}
+
+colors.forEach(([name, color], index) => {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.style.background = color;
+  button.title = name;
+  button.setAttribute("aria-label", name);
+  button.setAttribute("aria-pressed", String(index === selectedColor));
+
+  button.onclick = () => {
+    selectedColor = index;
+
+    [...palette.children].forEach((item, i) => {
+      item.setAttribute("aria-pressed", String(i === index));
+    });
+
+    updatePreview();
+  };
+
+  palette.append(button);
+});
+
+paper.onclick = event => {
+  const rect = paper.getBoundingClientRect();
+
+  choose(
+    (event.clientX - rect.left) / rect.width * 100,
+    (event.clientY - rect.top) / rect.height * 100
+  );
+};
+
+paper.onkeydown = event => {
+  if (event.target === paper &&
+      (event.key === "Enter" || event.key === " ")) {
+    event.preventDefault();
+    choose(50, 45);
+  }
+};
+
+input.oninput = updatePreview;
+
+form.onsubmit = event => {
+  event.preventDefault();
+
+  const word = input.value.trim();
+  if (!point || !word) return;
+
+  prints.push({
+    ...point,
+    color: selectedColor,
+    word,
+    angle: Math.round(Math.random() * 34 - 17)
+  });
+
+  try {
+    localStorage.setItem(key, JSON.stringify(prints));
+  } catch {
+    alert("This browser could not save your marks. They will remain until the page closes.");
+  }
+
+  cancel();
+};
+
+document.getElementById("cancel").onclick = cancel;
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") cancel();
+});
+
+window.addEventListener("storage", event => {
+  if (event.key !== key) return;
+
+  try {
+    const saved = JSON.parse(event.newValue || "[]");
+    if (Array.isArray(saved)) {
+      prints = saved.filter(valid);
+      render();
+    }
+  } catch {}
+});
+
+render();
+</script>
+</body>
+</html>
